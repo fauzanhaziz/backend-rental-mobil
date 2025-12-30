@@ -1,7 +1,7 @@
 import os
 import random  # <--- Penting untuk generate OTP
 from rest_framework import viewsets, status
-from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.decorators import api_view, permission_classes, action, authentication_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView  # <--- Penting untuk Class Based View baru
@@ -54,6 +54,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 # --- 2. LOGIN MANUAL ---
 @api_view(['POST'])
+@authentication_classes([])
 @permission_classes([AllowAny])
 def login(request):
     serializer = LoginSerializer(data=request.data)
@@ -81,6 +82,7 @@ def login(request):
 
 # --- 3. Register View ---
 @api_view(['POST'])
+@authentication_classes([])
 @permission_classes([AllowAny])
 def register(request):
     serializer = RegisterSerializer(data=request.data)
@@ -108,6 +110,7 @@ def logout(request):
 
 # --- 5. GOOGLE LOGIN ---
 @api_view(['POST'])
+@authentication_classes([])
 @permission_classes([AllowAny])
 def google_login(request):
     token = request.data.get('token')
