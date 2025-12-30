@@ -24,16 +24,14 @@ if RENDER_EXTERNAL_HOSTNAME:
 
 # Application definition
 INSTALLED_APPS = [
-    # JANGAN gunakan 'cloudinary_storage' di sini jika ingin Static aman.
-    # Gunakan format ini agar Cloudinary HANYA mengurus Media (Gambar).
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles', # Whitenoise butuh ini tetap standar
+    'django.contrib.staticfiles', # Standar Django Static
     
-    # Letakkan cloudinary_storage di bawah staticfiles agar tidak bentrok
+    # Cloudinary - Wajib di bawah staticfiles agar tidak merusak CSS Admin
     'cloudinary_storage', 
     'cloudinary',
 
@@ -56,8 +54,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # Whitenoise wajib di bawah SecurityMiddleware
-    "whitenoise.middleware.WhiteNoiseMiddleware", 
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Wajib untuk melayani CSS Admin di Render
     'corsheaders.middleware.CorsMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -120,28 +117,25 @@ USE_TZ = True
 # --- STATIC FILES (WHITENOISE) ---
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-# Pastikan ini hanya mengacu pada Whitenoise
+# Memaksa Whitenoise menangani file statis (CSS/JS Admin)
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# Konfigurasi Cloudinary
+# --- MEDIA FILES (CLOUDINARY) ---
+# Pendefinisian Media URL dan Root
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Setting Kredensial Cloudinary
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
 }
 
-# Perintah ini memberitahu Django: 
-# "Hanya gunakan Cloudinary untuk file yang diupload user (Media)"
+# Memaksa Django menggunakan Cloudinary HANYA untuk Media (Gambar yang diupload)
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# --- MEDIA FILES (CLOUDINARY) ---
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-
-
-# CORS & CSRF
+# --- CORS & CSRF ---
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
@@ -149,7 +143,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.onrender.com",
 ]
 
-# REST Framework
+# --- REST Framework ---
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
