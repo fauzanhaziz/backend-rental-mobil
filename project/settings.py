@@ -14,16 +14,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key-ganti-nanti')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# Di Render nanti kita set DEBUG=False di Environment Variables
 DEBUG = os.getenv('DEBUG') == 'True'
 
+# Pengaturan ALLOWED_HOSTS yang lebih dinamis
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
-# Tambahkan '*' jika ALLOWED_HOSTS kosong (agar aman saat deploy awal)
-if not ALLOWED_HOSTS or ALLOWED_HOSTS == ['']:
-    ALLOWED_HOSTS = ['*']
+RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # Application definition
 INSTALLED_APPS = [
+    # Cloudinary Storage diletakkan PALING ATAS
     'cloudinary_storage',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -31,14 +32,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'cloudinary',
+    'cloudinary', # Taruh di sini
 
     # Third party apps
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'django_filters',
 
-    # Local apps (Modul Rental Mobil)
+    # Local apps
     'users',
     'pelanggan',
     'mobil',
@@ -47,15 +49,12 @@ INSTALLED_APPS = [
     'pesanan',
     'pembayaran',
     'konten_web',
-
-    'django_filters',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # Whitenoise wajib di bawah SecurityMiddleware untuk melayani Static Files di Render
+    # Whitenoise wajib di bawah SecurityMiddleware
     "whitenoise.middleware.WhiteNoiseMiddleware", 
-    
     'corsheaders.middleware.CorsMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -84,13 +83,9 @@ TEMPLATES = [
     },
 ]
 
-# --- DATABASE CONFIGURATION (HYBRID: LOCAL & RENDER) ---
-
-# Cek apakah kita sedang di Render (Ada DATABASE_URL?)
+# --- DATABASE CONFIGURATION ---
 DATABASE_URL = os.getenv("DATABASE_URL")
-
 if DATABASE_URL:
-    # SETTING PRODUCTION (RENDER + NEON)
     DATABASES = {
         'default': dj_database_url.config(
             default=DATABASE_URL,
@@ -99,7 +94,6 @@ if DATABASE_URL:
         )
     }
 else:
-    # SETTING LOCAL (LAPTOP)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -114,50 +108,41 @@ else:
         }
     }
 
-
-# Password validation
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-]
-
 # Internationalization
 LANGUAGE_CODE = 'id'
 TIME_ZONE = 'Asia/Jakarta'
 USE_I18N = True
 USE_TZ = True
 
-# --- STATIC FILES CONFIGURATION (WHITENOISE) ---
+# --- STATIC FILES (WHITENOISE) ---
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-# Menggunakan Whitenoise untuk storage agar CSS Admin muncul di Render
+# Gunakan Whitenoise untuk mengelola file static (CSS Admin)
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# --- MEDIA FILES (CLOUDINARY) ---
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Gunakan Environment Variables agar aman di Render
+# Setting Cloudinary
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
 }
 
-# Set storage default untuk file media (gambar mobil, ktp, dll)
+# PENTING: Gunakan Cloudinary HANYA untuk MEDIA, bukan STATIC
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# CORS Configuration
+# CORS & CSRF
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
-    "https://*.onrender.com", # Izinkan domain render
+    "https://*.onrender.com",
 ]
 
-# REST Framework Configuration
+# REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -168,11 +153,9 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
-    'DATE_INPUT_FORMATS': ['%Y-%m-%d'],
-    'DATE_FORMAT': '%Y-%m-%d',
 }
 
-# JWT Configuration
+# JWT
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
@@ -181,25 +164,16 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# Custom User Model
 AUTH_USER_MODEL = 'users.User'
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Logging (Diset ke Console agar terbaca di Dashboard Render)
+# Logging
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
-    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
         },
     },
     'root': {
@@ -208,7 +182,7 @@ LOGGING = {
     },
 }
 
-# --- EMAIL CONFIGURATION (SMTP GMAIL) ---
+# SMTP GMAIL
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
