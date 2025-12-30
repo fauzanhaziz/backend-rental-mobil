@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles', 
     
-    # Cloudinary (Wajib di bawah staticfiles)
+    # Cloudinary - Wajib di bawah staticfiles agar CSS Admin tidak rusak
     'cloudinary_storage', 
     'cloudinary',
 
@@ -59,6 +59,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'project.urls'
+WSGI_APPLICATION = 'project.wsgi.application'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -74,9 +76,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'project.wsgi.application'
-
-# 6. DATABASE
+# 6. DATABASE (Neon / PostgreSQL)
 DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
     DATABASES = {
@@ -105,27 +105,33 @@ TIME_ZONE = 'Asia/Jakarta'
 USE_I18N = True
 USE_TZ = True
 
-# 8. STATIC & MEDIA (The Core Fix)
+# 8. STATIC & MEDIA (Cloudinary Fix)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+# Whitenoise menangani file statis (CSS/JS)
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# Setup Cloudinary secara eksplisit
+# Konfigurasi Cloudinary dari Environment Render
+CLD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
+CLD_API_KEY = os.getenv('CLOUDINARY_API_KEY')
+CLD_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
+
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+    'CLOUD_NAME': CLD_NAME,
+    'API_KEY': CLD_API_KEY,
+    'API_SECRET': CLD_API_SECRET,
 }
 
+# Paksa inisialisasi SDK Cloudinary
 cloudinary.config(
-    cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME'),
-    api_key = os.getenv('CLOUDINARY_API_KEY'),
-    api_secret = os.getenv('CLOUDINARY_API_SECRET'),
-    secure = True
+    cloud_name=CLD_NAME,
+    api_key=CLD_API_KEY,
+    api_secret=CLD_API_SECRET,
+    secure=True
 )
 
-# Hanya gunakan Cloudinary jika API_KEY tersedia (Production)
-if os.getenv('CLOUDINARY_API_KEY'):
+# Jika di Render atau ada API_KEY, gunakan Cloudinary sebagai storage media
+if os.getenv('RENDER') or CLD_API_KEY:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 else:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
@@ -168,7 +174,7 @@ LOGGING = {
     'root': {'handlers': ['console'], 'level': 'INFO'},
 }
 
-# 12. EMAIL
+# 12. EMAIL (SMTP GMAIL)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
