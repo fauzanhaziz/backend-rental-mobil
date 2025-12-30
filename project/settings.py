@@ -24,15 +24,18 @@ if RENDER_EXTERNAL_HOSTNAME:
 
 # Application definition
 INSTALLED_APPS = [
-    # Cloudinary Storage diletakkan PALING ATAS
-    'cloudinary_storage',
+    # JANGAN gunakan 'cloudinary_storage' di sini jika ingin Static aman.
+    # Gunakan format ini agar Cloudinary HANYA mengurus Media (Gambar).
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'cloudinary', # Taruh di sini
+    'django.contrib.staticfiles', # Whitenoise butuh ini tetap standar
+    
+    # Letakkan cloudinary_storage di bawah staticfiles agar tidak bentrok
+    'cloudinary_storage', 
+    'cloudinary',
 
     # Third party apps
     'rest_framework',
@@ -115,24 +118,28 @@ USE_I18N = True
 USE_TZ = True
 
 # --- STATIC FILES (WHITENOISE) ---
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-# Gunakan Whitenoise untuk mengelola file static (CSS Admin)
+
+# Pastikan ini hanya mengacu pada Whitenoise
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# --- MEDIA FILES (CLOUDINARY) ---
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-# Setting Cloudinary
+# Konfigurasi Cloudinary
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
 }
 
-# PENTING: Gunakan Cloudinary HANYA untuk MEDIA, bukan STATIC
+# Perintah ini memberitahu Django: 
+# "Hanya gunakan Cloudinary untuk file yang diupload user (Media)"
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# --- MEDIA FILES (CLOUDINARY) ---
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
 
 # CORS & CSRF
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
