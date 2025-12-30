@@ -3,24 +3,25 @@ import os
 import dj_database_url
 from datetime import timedelta
 from dotenv import load_dotenv
-import cloudinary # Tambahkan import ini
-import cloudinary.uploader # Tambahkan import ini
-import cloudinary.api # Tambahkan import ini
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
-# Load .env file (Hanya aktif di laptop)
+# 1. LOAD KONFIGURASI
 load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# 2. SECURITY
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key-ganti-nanti')
 DEBUG = os.getenv('DEBUG') == 'True'
 
+# 3. HOSTS & DOMAINS
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-# Application definition
+# 4. APLIKASI
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -29,11 +30,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles', 
     
-    # Cloudinary Storage (Wajib di bawah staticfiles agar CSS Admin aman)
+    # Cloudinary (Wajib di bawah staticfiles)
     'cloudinary_storage', 
     'cloudinary',
 
-    # Third party apps
+    # Third party
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
     'users', 'pelanggan', 'mobil', 'supir', 'promo', 'pesanan', 'pembayaran', 'konten_web',
 ]
 
+# 5. MIDDLEWARE
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', 
@@ -57,8 +59,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'project.urls'
-WSGI_APPLICATION = 'project.wsgi.application'
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -74,7 +74,9 @@ TEMPLATES = [
     },
 ]
 
-# --- DATABASE ---
+WSGI_APPLICATION = 'project.wsgi.application'
+
+# 6. DATABASE
 DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
     DATABASES = {
@@ -88,37 +90,33 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME'),
-            'USER': os.getenv('DB_USER'),
-            'PASSWORD': os.getenv('DB_PASSWORD'),
-            'HOST': os.getenv('DB_HOST'),
-            'PORT': os.getenv('DB_PORT'),
+            'NAME': os.getenv('DB_NAME', 'rentalmobil'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
             'OPTIONS': {'options': '-c search_path=rentalmobil,public'},
         }
     }
 
+# 7. INTERNATIONALIZATION
 LANGUAGE_CODE = 'id'
 TIME_ZONE = 'Asia/Jakarta'
 USE_I18N = True
 USE_TZ = True
 
-# --- STATIC FILES (WHITENOISE) ---
+# 8. STATIC & MEDIA (The Core Fix)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# --- MEDIA FILES (CLOUDINARY) ---
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-# Konfigurasi Storage
+# Setup Cloudinary secara eksplisit
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
 }
 
-# Inisialisasi SDK Cloudinary (Sangat penting agar koneksi stabil)
 cloudinary.config(
     cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME'),
     api_key = os.getenv('CLOUDINARY_API_KEY'),
@@ -126,14 +124,21 @@ cloudinary.config(
     secure = True
 )
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+# Hanya gunakan Cloudinary jika API_KEY tersedia (Production)
+if os.getenv('CLOUDINARY_API_KEY'):
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+else:
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
-# --- CORS & CSRF ---
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# 9. CORS & CSRF
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "https://*.onrender.com"]
 
-# --- REST Framework ---
+# 10. REST FRAMEWORK & JWT
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -155,6 +160,7 @@ SIMPLE_JWT = {
 AUTH_USER_MODEL = 'users.User'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# 11. LOGGING
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -162,7 +168,7 @@ LOGGING = {
     'root': {'handlers': ['console'], 'level': 'INFO'},
 }
 
-# EMAIL
+# 12. EMAIL
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
