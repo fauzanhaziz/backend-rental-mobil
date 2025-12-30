@@ -24,22 +24,20 @@ if not ALLOWED_HOSTS or ALLOWED_HOSTS == ['']:
 
 # Application definition
 INSTALLED_APPS = [
+    'cloudinary_storage',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'cloudinary',
 
     # Third party apps
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
 
-    'cloudinary_storage',
-    'django.contrib.staticfiles',
-    'cloudinary',
-    
     # Local apps (Modul Rental Mobil)
     'users',
     'pelanggan',
