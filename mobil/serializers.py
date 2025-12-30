@@ -5,8 +5,8 @@ class MobilSerializer(serializers.ModelSerializer):
     """
     Serializer untuk DETAIL & CREATE/UPDATE (Single Object)
     """
-    # Kita gunakan source='gambar' agar langsung mengambil URL asli dari storage (Cloudinary)
-    gambar_url = serializers.ImageField(source='gambar', read_only=True)
+    # Menggunakan serializers.SerializerMethodField jauh lebih aman untuk CloudinaryField
+    gambar_url = serializers.SerializerMethodField()
     
     transmisi_display = serializers.CharField(source='get_transmisi_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
@@ -16,6 +16,11 @@ class MobilSerializer(serializers.ModelSerializer):
         fields = '__all__' 
         read_only_fields = ['id', 'created_at', 'updated_at']
     
+    def get_gambar_url(self, obj):
+        if obj.gambar:
+            return obj.gambar.url # Mengambil link https://res.cloudinary.com/...
+        return None
+
     def validate_plat_nomor(self, value):
         if not value or value.strip() == "":
             return None
@@ -26,8 +31,7 @@ class MobilListSerializer(serializers.ModelSerializer):
     """
     Serializer untuk LIST (Daftar Mobil)
     """
-    # Menggunakan ImageField otomatis menangani URL absolut dari Cloudinary
-    gambar_url = serializers.ImageField(source='gambar', read_only=True)
+    gambar_url = serializers.SerializerMethodField()
     transmisi_display = serializers.CharField(source='get_transmisi_display', read_only=True)
     
     class Meta:
@@ -39,3 +43,8 @@ class MobilListSerializer(serializers.ModelSerializer):
             'popularity', 'keterangan',
             'dengan_supir'
         ]
+
+    def get_gambar_url(self, obj):
+        if obj.gambar:
+            return obj.gambar.url
+        return None

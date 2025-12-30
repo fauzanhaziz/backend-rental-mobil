@@ -1,4 +1,6 @@
 from django.db import models
+# Import CloudinaryField
+from cloudinary.models import CloudinaryField
 
 class Mobil(models.Model):
     STATUS_CHOICES = [
@@ -12,7 +14,6 @@ class Mobil(models.Model):
         ('matic', 'Automatic'),
     ]
 
-    # --- TAMBAHKAN OPSI POPULARITAS DISINI ---
     POPULARITY_CHOICES = [
         ('standard', 'Standard'),
         ('bestseller', 'Best Seller'),
@@ -33,7 +34,6 @@ class Mobil(models.Model):
     denda_per_jam = models.DecimalField(max_digits=12, decimal_places=2, default=50000)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='aktif')
     
-    # --- FIELD BARU ---
     popularity = models.CharField(
         max_length=20, 
         choices=POPULARITY_CHOICES, 
@@ -41,7 +41,10 @@ class Mobil(models.Model):
         help_text="Label marketing untuk mobil ini"
     )
     
-    gambar = models.ImageField(upload_to='mobil/', blank=True, null=True)
+    # --- PERUBAHAN DISINI ---
+    # Menggunakan CloudinaryField agar otomatis upload ke folder 'mobil' di Cloudinary
+    gambar = CloudinaryField('image', folder='mobil', blank=True, null=True)
+    
     keterangan = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
