@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+venv/
+env/
+
+# Django
+.env
+*.log                # ← PENTING: ignore semua file log
+db.sqlite3
+db.sqlite3-journal
+media/               # ignore user uploads (kecuali .gitkeep)
+staticfiles/         # ignore collected static files
+
+# Logs
+logs/*.log           # ← TAMBAHKAN INI
+!logs/.gitkeep       # tapi keep folder logs
+
+# Static
+staticfiles/*
+!staticfiles/.gitkeep
+
+# Media
+media/*
+!media/.gitkeep
+!media/*/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
