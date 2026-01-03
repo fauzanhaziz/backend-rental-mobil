@@ -140,9 +140,22 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # 9. CORS & CSRF
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+# Daftar website yang boleh mengakses API ini
+# Izinkan akses dari: Localhost, Vercel (Frontend), dan Render (Backend sendiri)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "https://niagakaryamandiri-rentalmobilpadang.vercel.app",
+    "https://backend-rental-mobil.onrender.com", 
+]
+
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "https://*.onrender.com"]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "https://niagakaryamandiri-rentalmobilpadang.vercel.app",
+    "https://backend-rental-mobil.onrender.com", # Ubah jadi spesifik biar rapi
+    "https://*.onrender.com", # Cadangan (biarkan saja supaya aman)
+]
 
 # 10. REST FRAMEWORK & JWT
 REST_FRAMEWORK = {
