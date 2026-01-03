@@ -10,19 +10,24 @@ class HeroSectionSerializer(serializers.ModelSerializer):
         fields = ['id', 'judul', 'sub_judul', 'background_media', 'media_url', 'media_type', 'is_active', 'urutan']
 
     def get_media_url(self, obj):
-        request = self.context.get('request')
-        # Tambahkan cek 'if request' agar tidak error jika dijalankan di shell/testing
-        if request and obj.background_media:
-            return request.build_absolute_uri(obj.background_media.url)
+        # PERBAIKAN: Langsung ambil URL dari CloudinaryField
+        # Cloudinary otomatis memberikan URL HTTPS lengkap, jadi tidak perlu build_absolute_uri
+        if obj.background_media:
+            return obj.background_media.url
         return None
 
     def get_media_type(self, obj):
         """Mendeteksi apakah file itu video atau image"""
         if obj.background_media:
-            # Ambil ekstensi dan lower case
             try:
-                ext = obj.background_media.name.split('.')[-1].lower()
-                if ext in ['mp4', 'webm', 'mov', 'mkv']:
+                # Ambil nama file dari properti .name
+                filename = getattr(obj.background_media, 'name', '')
+                if not filename:
+                    return 'unknown'
+                
+                ext = filename.split('.')[-1].lower()
+                # Tambahkan format video umum
+                if ext in ['mp4', 'webm', 'mov', 'mkv', 'avi']:
                     return 'video'
                 return 'image'
             except:
@@ -38,17 +43,20 @@ class DokumentasiSerializer(serializers.ModelSerializer):
         fields = ['id', 'judul', 'deskripsi', 'file_media', 'media_url', 'media_type', 'urutan', 'created_at']
 
     def get_media_url(self, obj):
-        request = self.context.get('request')
-        # Tambahkan cek 'if request'
-        if request and obj.file_media:
-            return request.build_absolute_uri(obj.file_media.url)
+        # PERBAIKAN: Langsung return URL Cloudinary
+        if obj.file_media:
+            return obj.file_media.url
         return None
 
     def get_media_type(self, obj):
         if obj.file_media:
             try:
-                ext = obj.file_media.name.split('.')[-1].lower()
-                if ext in ['mp4', 'webm', 'mov', 'mkv']:
+                filename = getattr(obj.file_media, 'name', '')
+                if not filename:
+                    return 'unknown'
+
+                ext = filename.split('.')[-1].lower()
+                if ext in ['mp4', 'webm', 'mov', 'mkv', 'avi']:
                     return 'video'
                 return 'image'
             except:
